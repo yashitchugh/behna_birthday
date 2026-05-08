@@ -74,7 +74,7 @@ body{font-family:'Nunito',sans-serif;background:#fff5f8;overflow-x:hidden;cursor
 </style>
 
 <!-- ===== LOADER / COUNTDOWN ===== -->
-<div id="loader" style="display:none!important">
+<div id="loader">
 <style>
 #loader{position:fixed;inset:0;z-index:1000;background:linear-gradient(135deg,#fff0f5 0%,#fce4f0 25%,#f0e4ff 55%,#e4f0ff 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .9s ease,transform .9s ease;padding:1.5rem}
 #loader.hide{opacity:0;pointer-events:none;transform:scale(1.06)}
@@ -407,7 +407,7 @@ body{font-family:'Nunito',sans-serif;background:#fff5f8;overflow-x:hidden;cursor
         Some people make life beautiful<br/>just by existing.<br/>You are one of them.
       </div>
       <div class="final-name">Happy Birthday, Didi ❤️</div>
-      <div class="final-sub">today, tomorrow, and always — you are so loved 🌸</div>
+      <div class="final-sub">I am always there for you in any condition 💪 — jai tu thodi ghabraza, tu de diye aavaj, re mein aa jaunga 🌸</div>
       <div class="final-emojis">💕 🌸 ✨ 🎀 🌷 ⭐ 💗</div>
     </div>
   </div>
@@ -505,7 +505,7 @@ function tick(){
     ['cd','ch','cm','cs'].forEach(id=>document.getElementById(id).textContent='00');
     document.getElementById('relMsg').classList.add('show');
     document.getElementById('enterBtn').classList.add('show');
-    return;
+    return true; // done
   }
   const s=Math.floor(diff/1000),curSec=s%60;
   document.getElementById('cd').textContent=pad(Math.floor(s/86400));
@@ -513,7 +513,30 @@ function tick(){
   document.getElementById('cm').textContent=pad(Math.floor((s%3600)/60));
   const csEl=document.getElementById('cs');csEl.textContent=pad(curSec);
   if(curSec!==prevSec){csEl.classList.add('tick');setTimeout(()=>csEl.classList.remove('tick'),150);prevSec=curSec;}
+  return false;
 }
+
+// ══ INIT ══
+(function init(){
+  // Show loader
+  document.getElementById('loader').style.display='flex';
+  document.getElementById('main').style.display='none';
+
+  // Run tick immediately, then every second
+  const done=tick();
+  if(!done){
+    const iv=setInterval(()=>{
+      const finished=tick();
+      if(finished){
+        clearInterval(iv);
+        confettiBurst(60);
+      }
+    },1000);
+  } else {
+    // Already past May 9 — show enter button right away
+    confettiBurst(60);
+  }
+})();
 
 // ══ CONFETTI ══
 function confettiBurst(count){
@@ -557,8 +580,6 @@ function enterSite(){
     buildFooterHearts();initScrollAnimations();
   },800);
 }
-
-// (bypass moved to end of file)
 
 // ══ HERO CANVAS ══
 function buildHeroCanvas(){
@@ -702,9 +723,136 @@ document.getElementById('lbImgWrap').addEventListener('touchstart',function(e){l
 document.getElementById('lbImgWrap').addEventListener('touchend',function(e){var diff=lbStartX-e.changedTouches[0].clientX;if(Math.abs(diff)>40)lbNav(diff>0?1:-1);},{passive:true});
 document.addEventListener('keydown',function(e){if(document.getElementById('lb').style.display==='flex'){if(e.key==='ArrowRight')lbNav(1);else if(e.key==='ArrowLeft')lbNav(-1);else if(e.key==='Escape')closeLB();}});
 
-// ── PREVIEW: skip countdown — remove before going live ──
-document.getElementById('loader').style.display='none';
-enterSite();
+// ══ MESSAGE ══
+function buildMessage(){
+  const el=document.getElementById('msgText');
+  const text="Wishing you a very Happy Birthday! 🎂\n\nMay you achieve mountains of success,\none peak at a time. 🏔️✨\n\nAnd most importantly — be happy, yara.\nBecause happiness is the most important thing in life. 💕";
+  let i=0;
+  el.innerHTML='<span class="msg-cursor">|</span>';
+  const cursor=el.querySelector('.msg-cursor');
+  function type(){
+    if(i<text.length){
+      el.insertBefore(document.createTextNode(text[i]),cursor);
+      i++;setTimeout(type,text[i-1]==='\n'?120:38);
+    }
+  }
+  // Start typing when section is in view
+  const obs=new IntersectionObserver(entries=>{
+    if(entries[0].isIntersecting){obs.disconnect();type();}
+  },{threshold:.3});
+  obs.observe(el.closest('.msg-wrap'));
+}
+
+// ══ CAKE ══
+const candleColors=[
+  {body:'#f472b6',drip:'#fda4af'},{body:'#c084fc',drip:'#d8b4fe'},
+  {body:'#60a5fa',drip:'#93c5fd'},{body:'#34d399',drip:'#6ee7b7'},
+  {body:'#fbbf24',drip:'#fde68a'},{body:'#f97316',drip:'#fdba74'}
+];
+function buildCake(){
+  const row=document.getElementById('candleRow');
+  row.innerHTML='';
+  for(let i=0;i<6;i++){
+    const c=candleColors[i%candleColors.length];
+    const cndl=document.createElement('div');cndl.className='cndl';cndl.dataset.idx=i;
+    cndl.innerHTML=`<div class="flame"></div><div class="cndl-body" style="background:${c.body}"><div class="cndl-drip" style="background:${c.drip}"></div></div>`;
+    cndl.onclick=()=>blowSingle(cndl);
+    row.appendChild(cndl);
+  }
+  // cake dots
+  ['cakeDots1','cakeDots2'].forEach(id=>{
+    const el=document.getElementById(id);el.innerHTML='';
+    const cols=['#f472b6','#c084fc','#93c5fd','#fbbf24','#34d399'];
+    for(let i=0;i<8;i++){const d=document.createElement('div');d.className='cake-dot';d.style.background=cols[i%cols.length];el.appendChild(d);}
+  });
+  // bg floats
+  const bf=document.getElementById('cakeBgFloats');bf.innerHTML='';
+  ['🎂','🎉','✨','🎀','💕','🌸','⭐','🎊'].forEach((em,i)=>{
+    const d=document.createElement('div');
+    d.style.cssText=`position:absolute;font-size:${1.2+Math.random()*.8}rem;left:${Math.random()*100}%;top:${Math.random()*100}%;animation:floatBob ${2.5+Math.random()*2}s ease-in-out infinite;animation-delay:${i*.3}s;opacity:.35;user-select:none;pointer-events:none`;
+    d.textContent=em;bf.appendChild(d);
+  });
+}
+function blowSingle(cndl){
+  cndl.classList.add('blown');
+  const allBlown=[...document.querySelectorAll('.cndl')].every(c=>c.classList.contains('blown'));
+  if(allBlown){
+    document.getElementById('wishBtn').classList.add('blown');
+    document.getElementById('wishBtn').textContent='🎉 Wish Made!';
+    document.getElementById('wishMsg').classList.add('show');
+    confettiBurst(80);
+  }
+}
+function blowCandles(){
+  document.querySelectorAll('.cndl').forEach(c=>c.classList.add('blown'));
+  document.getElementById('wishBtn').classList.add('blown');
+  document.getElementById('wishBtn').textContent='🎉 Wish Made!';
+  document.getElementById('wishMsg').classList.add('show');
+  confettiBurst(80);
+}
+
+// ══ REASONS ══
+const reasonsData=[
+  {icon:'📺',text:'Defended the remote for KKKG — zero negotiation, full power'},
+  {icon:'✍️',text:'Signed Mummy\'s name without blinking — absolute legend'},
+  {icon:'⚗️',text:'Taught me Acids for an hour with full patience (mostly 😂)'},
+  {icon:'🍜',text:'2AM Maggie partner — best criminal accomplice ever'},
+  {icon:'🛵',text:'Random scooty rides to nowhere — best rides of my life'},
+  {icon:'🥟',text:'Tibet stall queen — never left hungry, always left broke 😂'},
+  {icon:'📵',text:'Blocked the college app so I could sneak to cinema — legend'},
+  {icon:'🤫',text:'Kept every secret — my safest place, always'},
+  {icon:'🌟',text:'Loudest voice cheering me on when I doubted myself'},
+  {icon:'🤲',text:'Raised me right — every lesson, every pareshani, har baar'},
+  {icon:'💕',text:'Loves without conditions, no questions asked'},
+  {icon:'❤️',text:'I am who I am because of you — thank you doesn\'t cover it'},
+];
+function buildReasons(){
+  const g=document.getElementById('reasonsGrid');g.innerHTML='';
+  reasonsData.forEach(r=>{
+    const card=document.createElement('div');card.className='reason-card';
+    card.innerHTML=`<span class="reason-icon">${r.icon}</span><div class="reason-text">${r.text}</div>`;
+    g.appendChild(card);
+  });
+}
+
+// ══ FINAL SECTION FLOATS ══
+function buildFinalSection(){
+  const ff=document.getElementById('finalFloats');ff.innerHTML='';
+  ['💕','🌸','✨','🎀','🌷','⭐','💗','🎊','🌟','🎁'].forEach((em,i)=>{
+    const d=document.createElement('div');
+    d.style.cssText=`position:absolute;font-size:${1+Math.random()*1.2}rem;left:${Math.random()*100}%;top:${Math.random()*100}%;animation:floatBob ${3+Math.random()*2}s ease-in-out infinite;animation-delay:${i*.25}s;opacity:.3;user-select:none;pointer-events:none`;
+    d.textContent=em;ff.appendChild(d);
+  });
+}
+
+// ══ FOOTER HEARTS ══
+function buildFooterHearts(){
+  const fh=document.getElementById('footerHearts');fh.innerHTML='';
+  ['💕','🌸','✨','💗','🌷'].forEach((em,i)=>{
+    const d=document.createElement('div');
+    d.style.cssText=`position:absolute;font-size:${.9+Math.random()*.7}rem;left:${10+i*18}%;bottom:0;animation:floatUp ${3+Math.random()*2}s linear infinite;animation-delay:${i*.4}s;opacity:.5;user-select:none;pointer-events:none`;
+    d.textContent=em;fh.appendChild(d);
+  });
+}
+
+// ══ MSG PARTICLES ══
+function buildMsgParticles(){
+  const mp=document.getElementById('msgPart');mp.innerHTML='';
+  ['💕','🌸','✨','💗','🌷','⭐'].forEach((em,i)=>{
+    const d=document.createElement('div');d.className='mp';
+    d.style.cssText=`left:${Math.random()*100}%;font-size:${.8+Math.random()*.7}rem;animation-delay:${Math.random()*4}s;animation-duration:${4+Math.random()*3}s`;
+    d.textContent=em;mp.appendChild(d);
+  });
+}
+
+// ══ SCROLL ANIMATIONS ══
+function initScrollAnimations(){
+  buildMsgParticles();
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+  },{threshold:.15});
+  document.querySelectorAll('.tcard,.reason-card').forEach(el=>obs.observe(el));
+}
 </script>
 </body>
 </html>
