@@ -496,7 +496,7 @@ for(let i=0;i<26;i++){
 }
 
 // ══ COUNTDOWN ══
-const targetDate=new Date('2025-05-09T00:00:00');
+const targetDate=new Date('2026-05-09T00:00:00');
 function pad(n){return String(n).padStart(2,'0');}
 let prevSec=-1;
 function tick(){
@@ -505,7 +505,7 @@ function tick(){
     ['cd','ch','cm','cs'].forEach(id=>document.getElementById(id).textContent='00');
     document.getElementById('relMsg').classList.add('show');
     document.getElementById('enterBtn').classList.add('show');
-    return true; // done
+    return true;
   }
   const s=Math.floor(diff/1000),curSec=s%60;
   document.getElementById('cd').textContent=pad(Math.floor(s/86400));
@@ -516,29 +516,6 @@ function tick(){
   return false;
 }
 
-// ══ INIT ══
-(function init(){
-  // Show loader
-  document.getElementById('loader').style.display='flex';
-  document.getElementById('main').style.display='none';
-
-  // Run tick immediately, then every second
-  const done=tick();
-  if(!done){
-    const iv=setInterval(()=>{
-      const finished=tick();
-      if(finished){
-        clearInterval(iv);
-        confettiBurst(60);
-      }
-    },1000);
-  } else {
-    // Already past May 9 — show enter button right away
-    confettiBurst(60);
-  }
-})();
-
-// ══ CONFETTI ══
 function confettiBurst(count){
   const canvas=document.getElementById('confCanvas');
   canvas.style.display='block';canvas.width=window.innerWidth;canvas.height=window.innerHeight;
@@ -853,6 +830,20 @@ function initScrollAnimations(){
   },{threshold:.15});
   document.querySelectorAll('.tcard,.reason-card').forEach(el=>obs.observe(el));
 }
+
+// ══ START ══
+(function start(){
+  document.getElementById('loader').style.display='flex';
+  document.getElementById('main').style.display='none';
+  const done=tick();
+  if(!done){
+    const iv=setInterval(()=>{
+      if(tick()){clearInterval(iv);confettiBurst(60);}
+    },1000);
+  } else {
+    confettiBurst(60);
+  }
+})();
 </script>
 </body>
 </html>
